@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import CustomUser, Book, Borrow
+from .models import CustomUser, Book, Borrow, BorrowHistory
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -24,18 +24,29 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 class BookSerializer(serializers.ModelSerializer):
+    borrowed_by = serializers.SerializerMethodField()
+
     class Meta:
         model = Book
-        fields = '__all__'
+        fields = '__all__'  # include borrowed_by field dynamically
+
+    def get_borrowed_by(self, obj):
+        borrow = obj.borrow_set.filter(return_date__isnull=True).first()
+        if borrow:
+            return borrow.user.username
+        return None
 
 class BorrowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Borrow
         fields = '__all__'
+        
+    def get_borrowed_by(self, obj):
+        borrow = obj.borrow_set.filter(return_date__isnull=True).first()
+        print("------------------------", borrow)
+        return borrow.user.username if borrow else None
 
 
-from rest_framework import serializers
-from .models import BorrowHistory
 
 class BorrowHistorySerializer(serializers.ModelSerializer):
     class Meta:
