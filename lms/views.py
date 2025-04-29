@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from django.utils import timezone
-from .serializers import RegisterSerializer, BookSerializer, CustomTokenObtainPairSerializer, BorrowHistorySerializer
+from .serializers import RegisterSerializer, BookSerializer, CustomTokenObtainPairSerializer, BorrowHistorySerializer, BorrowSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import Book, Borrow, BorrowHistory
 
@@ -124,7 +124,10 @@ class BorrowHistoryView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        # Fetch borrow history of the logged-in user
-        borrow_history = BorrowHistory.objects.filter(user=request.user)
-        serializer = BorrowHistorySerializer(borrow_history, many=True)
-        return Response(serializer.data)
+        if request.user.role == 'librarian':  # if librarian, see all
+            borrows = Borrow.objects.all()
+        else:  # if member, see only their own
+            borrows = Borrow.objects.filter(user=request.user)
+
+        serializer = BorrowSerializer(borrows, many=True)
+        return Response(serializer.data, status=200)
