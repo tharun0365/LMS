@@ -51,7 +51,9 @@ class BorrowSerializer(serializers.ModelSerializer):
 
 
 class BorrowHistorySerializer(serializers.ModelSerializer):
+    
+    book_image = serializers.ImageField(source='book.image', read_only=True)
     class Meta:
         model = BorrowHistory
-        fields = ['book', 'borrowed_on', 'returned_on']
+        fields = '__all__'
         depth = 1  # This will allow the book details to be nested
