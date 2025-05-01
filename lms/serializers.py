@@ -49,11 +49,18 @@ class BorrowSerializer(serializers.ModelSerializer):
         return borrow.user.username if borrow else None
 
 
-
 class BorrowHistorySerializer(serializers.ModelSerializer):
-    
-    book_image = serializers.ImageField(source='book.image', read_only=True)
+    book = BookSerializer()
+    book_title = serializers.CharField(source='book.title', read_only=True)
+    book_image = serializers.SerializerMethodField()
+    username = serializers.CharField(source='user.username', read_only=True)
+
     class Meta:
         model = BorrowHistory
-        fields = '__all__'
-        depth = 1  # This will allow the book details to be nested
+        fields = ['id', 'book_title', 'book_image', 'username', 'borrow_date', 'return_date', 'image']
+
+    def get_book_image(self, obj):
+        request = self.context.get('request')
+        if obj.book.image:
+            return request.build_absolute_uri(obj.book.image.url)
+        return None
